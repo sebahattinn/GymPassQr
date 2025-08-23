@@ -1,0 +1,107 @@
+# -------------------------------
+# Core / Generic
+# -------------------------------
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+Thumbs.db
+.svn/
+.build/
+.buildlog/
+.history
+migrate_working_dir/
+
+# -------------------------------
+# IDE
+# -------------------------------
+# IntelliJ / Android Studio
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code (ekipçe paylaşmak istemezsen açık bırak)
+.vscode/
+
+# Xcode
+xcuserdata/
+DerivedData/
+
+# -------------------------------
+# Flutter / Dart / Pub
+# -------------------------------
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+.packages
+.pub/
+.pub-cache/
+coverage/
+**/doc/api/
+
+# Flutter iOS build id
+**/ios/Flutter/.last_build_id
+
+# Build çıktıları
+/build/
+
+# -------------------------------
+# Android
+# -------------------------------
+/android/.gradle/
+/android/local.properties
+/android/key.properties
+
+# App build türleri
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# İmzalama dosyaları (kesinlikle repo'ya koyma)
+*.keystore
+*.jks
+
+# Paketler / artefaktlar
+*.aab
+*.apk
+
+# -------------------------------
+# iOS / macOS (CocoaPods)
+# -------------------------------
+ios/Pods/
+ios/.symlinks/
+/ios/Flutter/Flutter.podspec
+
+# macOS (kullanıyorsan)
+macos/Pods/
+macos/.symlinks/
+macos/Flutter/ephemeral/
+
+# -------------------------------
+# Windows / Linux (Flutter desktop)
+# -------------------------------
+# (build/ zaten ignore ediliyor; ek bir şeye gerek yok)
+
+# -------------------------------
+# Env / Sertifikalar / Secrets
+# -------------------------------
+.env
+.env.*
+*.p12
+*.pem
+*.cer
+*.mobileprovision
+
+# Firebase (genelde gizli tutulur; bilerek commit edeceksen bu satırları kaldır)
+**/google-services.json
+**/GoogleService-Info.plist
+lib/firebase_options.dart
+
+# -------------------------------
+# Sembolleştirme / Obfuscation
+# -------------------------------
+app.*.symbols
+app.*.map.json
