@@ -1,4 +1,4 @@
-# 🏋️ GymPass QR - Digital Gym Access System
+# 💪 GymPass QR - Digital Gym Access System
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-blue.svg)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.0-blue.svg)](https://dart.dev)
@@ -9,9 +9,20 @@ A modern mobile application that replaces physical gym membership cards with sec
 
 ## 📱 Screenshots
 
-| Splash Screen | Phone Input | OTP Verification | Home Screen |
-|--------------|-------------|------------------|-------------|
-| ![Splash](screenshots/splash.png) | ![Phone](screenshots/phone.png) | ![OTP](screenshots/otp.png) | ![Home](screenshots/home.png) |
+<table>
+  <tr>
+    <th>Phone Input</th>
+    <th>OTP Verification</th>
+    <th>Home Screen (Active)</th>
+    <th>Home Screen (Inactive)</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="assets/forgithub/phone_screen.png" alt="Phone Input" width="220"></td>
+    <td align="center"><img src="assets/forgithub/verification_screen.png" alt="OTP Verification" width="220"></td>
+    <td align="center"><img src="assets/forgithub/home_screen.png" alt="Home Screen Active" width="220"></td>
+    <td align="center"><img src="assets/forgithub/nonactiveuser_screen.png" alt="Home Screen Inactive" width="220"></td>
+  </tr>
+</table>
 
 ## ✨ Features
 
