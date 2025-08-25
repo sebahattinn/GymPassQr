@@ -1,0 +1,87 @@
+4. API Endpoints & Models
+4.1 API Endpoints
+dartclass ApiEndpoints {
+  static const String baseUrl = 'https://api.gympass.com/v1';
+  
+  // Authentication
+  static const String sendOtp = '/auth/send-otp';
+  static const String verifyOtp = '/auth/verify-otp';
+  static const String refreshToken = '/auth/refresh';
+  
+  // User
+  static const String getUserProfile = '/user/profile';
+  static const String getQRCode = '/user/qr-code';
+}
+4.2 Data Models
+User Model
+dartclass User {
+  final String id;
+  final String firstName;
+  final String lastName;
+  final String phoneNumber;
+  final String? profilePhotoUrl;
+  final DateTime membershipStart;
+  final DateTime membershipEnd;
+  final String membershipType;
+  final bool isActive;
+}
+Auth Response Model
+dartclass AuthResponse {
+  final String accessToken;
+  final String refreshToken;
+  final int expiresIn;
+  final User user;
+}
+QR Code Model
+dartclass QRCodeData {
+  final String userId;
+  final String token;
+  final DateTime validUntil;
+  final Map<String, dynamic> metadata;
+}
+5. Core Functionality Implementation
+5.1 Token Management Strategy
+dartclass TokenManager {
+  // Store tokens securely
+  static Future<void> saveTokens(String access, String refresh);
+  
+  // Check token validity
+  static Future<bool> hasValidToken();
+  
+  // Auto-refresh mechanism
+  static Future<String?> getValidAccessToken();
+  
+  // Clear on logout
+  static Future<void> clearTokens();
+}
+5.2 Error Handling Strategy
+dartclass ErrorHandler {
+  static void handleApiError(DioException error) {
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+        // Show timeout error
+      case DioExceptionType.badResponse:
+        // Handle based on status code
+      default:
+        // Generic error handling
+    }
+  }
+}
+5.3 QR Code Generation
+dartclass QRGenerator {
+  static Widget generateQRCode(QRCodeData data) {
+    final jsonData = jsonEncode({
+      'userId': data.userId,
+      'token': data.token,
+      'validUntil': data.validUntil.toIso8601String(),
+      'metadata': data.metadata,
+    });
+    
+    return QrImageView(
+      data: jsonData,
+      version: QrVersions.auto,
+      size: 250.0,
+      errorCorrectionLevel: QrErrorCorrectLevel.H,
+    );
+  }
+}

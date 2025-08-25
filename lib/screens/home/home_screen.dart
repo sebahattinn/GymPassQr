@@ -1,5 +1,4 @@
 import 'dart:io' show Platform;
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -149,11 +148,17 @@ class _QrSectionWrapper extends StatelessWidget {
     final state = context.findAncestorStateOfType<_HomeScreenState>();
     final scale = state?._qrScale ?? kAlwaysCompleteAnimation;
 
+    // Üyelik aktif mi?
+    final u = up.user!;
+    final membershipActive =
+        u.isActive && u.membershipEnd.isAfter(DateTime.now());
+
     return _QrSection(
       scale: scale,
       qrData: up.qrCodeData,
       isRefreshing: up.isRefreshing,
       error: up.errorMessage,
+      membershipActive: membershipActive, // ⬅️ eklendi
       onRefresh: () => context.read<UserProvider>().refreshData(),
     );
   }
@@ -546,6 +551,7 @@ class _QrSection extends StatelessWidget {
     required this.qrData,
     required this.isRefreshing,
     required this.error,
+    required this.membershipActive,
     required this.onRefresh,
   });
 
@@ -553,6 +559,7 @@ class _QrSection extends StatelessWidget {
   final QrCodeData? qrData;
   final bool isRefreshing;
   final String? error;
+  final bool membershipActive;
   final Future<void> Function() onRefresh;
 
   @override
@@ -575,7 +582,27 @@ class _QrSection extends StatelessWidget {
                   (c.maxWidth - 48).clamp(120.0, 220.0).toDouble();
 
               Widget body;
-              if (qrData != null && qrData!.isValid) {
+
+              // 🔒 Üyelik aktif değilse QR göstermeyiz
+              if (!membershipActive) {
+                body = SizedBox(
+                  height: qrSize,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.lock_outline,
+                          size: 48, color: AppTheme.errorColor),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Üyeliğiniz aktif değil veya süresi dolmuş.\nQR kod oluşturulamaz.',
+                        textAlign: TextAlign.center,
+                        style: AppTheme.bodyMedium
+                            .copyWith(color: AppTheme.errorColor),
+                      ),
+                    ],
+                  ),
+                );
+              } else if (qrData != null && qrData!.isValid) {
                 body = Column(
                   children: [
                     ScaleTransition(
@@ -644,17 +671,20 @@ class _QrSection extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
-            onPressed: isRefreshing ? null : onRefresh,
+            onPressed: (!membershipActive || isRefreshing) ? null : onRefresh,
             icon: Icon(
               Icons.refresh,
-              color:
-                  isRefreshing ? AppTheme.textSecondary : AppTheme.primaryColor,
+              color: (!membershipActive || isRefreshing)
+                  ? AppTheme.textSecondary
+                  : AppTheme.primaryColor,
             ),
             label: Text(
-              isRefreshing ? 'Yenileniyor…' : 'QR’yi Yenile',
+              !membershipActive
+                  ? 'Üyelik Gerekli'
+                  : (isRefreshing ? 'Yenileniyor…' : 'QR’yi Yenile'),
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: isRefreshing
+                color: (!membershipActive || isRefreshing)
                     ? AppTheme.textSecondary
                     : AppTheme.primaryColor,
               ),
@@ -798,7 +828,6 @@ class _Step extends StatelessWidget {
       );
 }
 
-/// ============== YARDIMCI FONKSİYONLAR ==============
 String _t(DateTime d) =>
     '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 

@@ -4,7 +4,7 @@ import 'package:gym_pass_qr/screens/home/home_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:gym_pass_qr/providers/auth_provider.dart';
 import 'package:gym_pass_qr/providers/user_provider.dart';
-import 'package:gym_pass_qr/screens/home/home_screen.dart'; // doğru path'i yazmayı unutma
+// import 'package:gym_pass_qr/screens/home/home_screen.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

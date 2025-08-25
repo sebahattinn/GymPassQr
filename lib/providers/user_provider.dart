@@ -6,9 +6,6 @@ import 'package:gym_pass_qr/models/user_model.dart';
 import 'package:gym_pass_qr/services/auth_service.dart';
 import 'package:gym_pass_qr/utils/logger.dart';
 
-/// User and QR code state management
-/// WHY: Manages user-specific data and QR generation
-/// Separate from auth to keep concerns isolated
 class UserProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
 
@@ -34,13 +31,26 @@ class UserProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get hasValidQr => _qrCodeData != null && _qrCodeData!.isValid;
 
+  // Üyelik aktif mi? (tek nokta)
+  bool get _membershipActive =>
+      _user != null &&
+      _user!.isActive &&
+      _user!.membershipEnd.isAfter(DateTime.now());
+
   /// Login sonrası çağrılır
   void setUser(User user) {
     _user = user;
     notifyListeners();
 
-    // İlk QR'ı hemen üret (overlay ile)
-    generateQrCode(silent: false);
+    // Üyelik aktifse QR üret, değilse QR'ı temizle ve mesaj ver
+    if (_membershipActive) {
+      generateQrCode(silent: false);
+    } else {
+      _qrCodeData = null;
+      _errorMessage =
+          'Üyeliğiniz aktif değil veya süresi dolmuş. QR kod oluşturulamaz.';
+      notifyListeners();
+    }
 
     // Tek timer başlat (tek merkez: AppConstants)
     _startQrAutoRefresh();
@@ -52,6 +62,16 @@ class UserProvider extends ChangeNotifier {
     try {
       if (_user == null) {
         AppLogger.warning('Cannot generate QR - no user');
+        return;
+      }
+
+      // Üyelik pasif/expired ise QR üretme
+      if (!_membershipActive) {
+        _qrCodeData = null;
+        _errorMessage =
+            'Üyeliğiniz aktif değil veya süresi dolmuş. QR kod oluşturulamaz.';
+        if (!silent) notifyListeners();
+        AppLogger.warning('Skip QR generation - membership inactive/expired');
         return;
       }
 
@@ -89,7 +109,15 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
 
       _user = await _authService.getUserProfile();
-      _qrCodeData = await _authService.generateQrCode();
+
+      // Üyelik aktifse QR üret, değilse QR'ı temizle ve mesaj ver
+      if (_membershipActive) {
+        _qrCodeData = await _authService.generateQrCode();
+      } else {
+        _qrCodeData = null;
+        _errorMessage =
+            'Üyeliğiniz aktif değil veya süresi dolmuş. QR kod oluşturulamaz.';
+      }
 
       // Manuel yenilemede de referansı güncelle
       _lastAutoRefreshAt = DateTime.now();
@@ -150,6 +178,17 @@ class UserProvider extends ChangeNotifier {
       if (_lastAutoRefreshAt != null) {
         final elapsed = now.difference(_lastAutoRefreshAt!).inSeconds;
         if (elapsed < AppConstants.qrRefreshSeconds) return;
+      }
+
+      // Üyelik aktif değilse QR üretme; varsa da temizle
+      if (!_membershipActive) {
+        if (_qrCodeData != null || _errorMessage == null) {
+          _qrCodeData = null;
+          _errorMessage =
+              'Üyeliğiniz aktif değil veya süresi dolmuş. QR kod oluşturulamaz.';
+          notifyListeners();
+        }
+        return;
       }
 
       _autoRefreshing = true;
