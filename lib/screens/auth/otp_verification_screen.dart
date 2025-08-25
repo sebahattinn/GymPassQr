@@ -172,6 +172,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                               width: 80,
                               height: 80,
                               decoration: BoxDecoration(
+                                // ignore: deprecated_member_use
                                 color: AppTheme.primaryColor.withOpacity(0.1),
                                 shape: BoxShape.circle,
                               ),
@@ -185,9 +186,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                           const SizedBox(height: 20),
 
                           // Title
-                          FittedBox(
+                          const FittedBox(
                             fit: BoxFit.scaleDown,
-                            child: const Text(
+                            child: Text(
                               'Doğrulama Kodu',
                               style: AppTheme.heading2,
                               textAlign: TextAlign.center,
@@ -224,8 +225,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                             child: LayoutBuilder(
                               builder: (context, c) {
                                 const gap = 10.0;
-                                final slots = AppConstants.otpLength;
-                                final totalGap = gap * (slots - 1);
+                                const slots = AppConstants.otpLength;
+                                const totalGap = gap * (slots - 1);
                                 final avail = c.maxWidth - totalGap - 8;
                                 final fw = (avail / slots)
                                     .clamp(42.0, 60.0); // güvenli aralık
@@ -248,6 +249,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                                     activeFillColor: Colors.white,
                                     inactiveFillColor: AppTheme.surfaceColor,
                                     selectedFillColor:
+                                        // ignore: deprecated_member_use
                                         AppTheme.primaryColor.withOpacity(0.1),
                                     activeColor: AppTheme.primaryColor,
                                     inactiveColor: AppTheme.dividerColor,
@@ -344,6 +346,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                                         ),
                                         decoration: BoxDecoration(
                                           color: AppTheme.primaryColor
+                                              // ignore: deprecated_member_use
                                               .withOpacity(0.1),
                                           borderRadius:
                                               BorderRadius.circular(8),
@@ -365,9 +368,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
+                              // ignore: deprecated_member_use
                               color: AppTheme.infoColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
+                                // ignore: deprecated_member_use
                                 color: AppTheme.infoColor.withOpacity(0.3),
                               ),
                             ),

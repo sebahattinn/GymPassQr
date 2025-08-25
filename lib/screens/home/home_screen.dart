@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -50,18 +51,19 @@ class _HomeScreenState extends State<HomeScreen>
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        title: const Text('Çıkış Yap'),
+        content: const Text('Uygulamadan çıkmak istediğinize emin misiniz?'),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('İptal'),
+          ),
           ElevatedButton(
             style:
                 ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Logout'),
+            child: const Text('Çıkış yap'),
           ),
         ],
       ),
@@ -100,18 +102,19 @@ class _HomeScreenState extends State<HomeScreen>
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               _Header(user: user, onLogout: _logout, compact: compact),
-              SliverToBoxAdapter(
+              const SliverToBoxAdapter(
                 child: Padding(
-                  // içeriği güvenli aralıkla tut
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  padding: EdgeInsets.fromLTRB(16, 12, 16, 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _MembershipCard(user: user, compact: compact),
-                      const SizedBox(height: 16),
-                      const NoScreenshot(child: _QrSectionWrapper()),
-                      const SizedBox(height: 16),
-                      const _Instructions(),
+                      // Üyelik kartı
+                      _MembershipCardWrapper(),
+                      SizedBox(height: 16),
+                      // Ekran görüntüsü engelli QR alanı
+                      NoScreenshot(child: _QrSectionWrapper()),
+                      SizedBox(height: 16),
+                      _Instructions(),
                     ],
                   ),
                 ),
@@ -121,6 +124,19 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
     );
+  }
+}
+
+class _MembershipCardWrapper extends StatelessWidget {
+  const _MembershipCardWrapper();
+
+  @override
+  Widget build(BuildContext context) {
+    final up = context.watch<UserProvider>();
+    final user = up.user!;
+    final w = MediaQuery.of(context).size.width;
+    final compact = w < 360;
+    return _MembershipCard(user: user, compact: compact);
   }
 }
 
@@ -143,17 +159,19 @@ class _QrSectionWrapper extends StatelessWidget {
   }
 }
 
-/// ============== HEADER (Overflow-safe) ==============
+/// ============== HEADER ==============
 class _Header extends StatelessWidget {
-  const _Header(
-      {required this.user, required this.onLogout, required this.compact});
+  const _Header({
+    required this.user,
+    required this.onLogout,
+    required this.compact,
+  });
   final User user;
   final VoidCallback onLogout;
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    // daha kompakt boyutlar
     final avatarSize = compact ? 56.0 : 64.0;
     final titleSize = compact ? 20.0 : 22.0;
 
@@ -162,14 +180,13 @@ class _Header extends StatelessWidget {
       elevation: 0,
       backgroundColor: AppTheme.primaryColor,
       automaticallyImplyLeading: false,
-      // esnek alan yüksekliği — küçük farkla fazla tuttuk
       expandedHeight: compact ? 132 : 152,
       toolbarHeight: 56,
       actions: [
         IconButton(
           icon: const Icon(Icons.logout, color: Colors.white),
           onPressed: onLogout,
-          tooltip: 'Logout',
+          tooltip: 'Çıkış',
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
@@ -177,54 +194,47 @@ class _Header extends StatelessWidget {
           decoration: const BoxDecoration(gradient: AppTheme.primaryGradient),
           child: SafeArea(
             bottom: false,
-            child: LayoutBuilder(
-              builder: (context, c) {
-                // Bu yapı taşmaları kesin olarak engeller:
-                // Tüm içerik alanı içine sığmazsa FittedBox küçültür.
-                return SizedBox.expand(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _Avatar(url: user.profilePhotoUrl, size: avatarSize),
-                          const SizedBox(height: 8),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 320),
-                            child: Text(
-                              user.fullName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: AppTheme.heading2.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: titleSize,
-                              ),
-                            ),
+            child: SizedBox.expand(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _Avatar(url: user.profilePhotoUrl, size: avatarSize),
+                      const SizedBox(height: 8),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 320),
+                        child: Text(
+                          user.fullName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: AppTheme.heading2.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: titleSize,
                           ),
-                          const SizedBox(height: 2),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 320),
-                            child: Text(
-                              Validators.formatPhoneForDisplay(
-                                  user.phoneNumber),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: AppTheme.bodySmall
-                                  .copyWith(color: Colors.white70),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 2),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 320),
+                        child: Text(
+                          Validators.formatPhoneForDisplay(user.phoneNumber),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: AppTheme.bodySmall
+                              .copyWith(color: Colors.white70),
+                        ),
+                      ),
+                    ],
                   ),
-                );
-              },
+                ),
+              ),
             ),
           ),
         ),
@@ -268,14 +278,15 @@ class _Avatar extends StatelessWidget {
             : const ColoredBox(
                 color: Colors.white24,
                 child: Center(
-                    child: Icon(Icons.person, size: 36, color: Colors.white)),
+                  child: Icon(Icons.person, size: 36, color: Colors.white),
+                ),
               ),
       ),
     );
   }
 }
 
-/// ============== MEMBERSHIP CARD (dinamik & güvenli) ==============
+/// ============== ÜYELİK KARTI ==============
 class _MembershipCard extends StatelessWidget {
   const _MembershipCard({required this.user, required this.compact});
   final User user;
@@ -287,22 +298,23 @@ class _MembershipCard extends StatelessWidget {
     final start = user.membershipStart;
     final end = user.membershipEnd;
 
-    final totalDays =
-        end.isAfter(start) ? end.difference(start).inDays.clamp(1, 36500) : 1;
-    final remainingDays = end.isAfter(now) ? end.difference(now).inDays : 0;
+    final totalDays = end.difference(start).inDays.abs().clamp(1, 1000000);
+    final elapsedDays = now.difference(start).inDays;
+    final remainingDays = end.difference(now).inDays;
 
-    // Çubuğu “kalan/total” olarak gösteriyoruz: üyelik başında dolu,
-    // sona yaklaştıkça azalır.
-    final progress = (remainingDays / totalDays).clamp(0.0, 1.0);
+    double progress = 0.0; // kalan/total (kalan arttıkça bar dolu)
+    if (totalDays > 0 && remainingDays > 0) {
+      progress = (remainingDays / totalDays).clamp(0.0, 1.0);
+    }
 
-    final isValid = end.isAfter(now) && user.isActive;
+    final isValid = remainingDays > 0 && user.isActive;
     final isSoon = remainingDays > 0 && remainingDays <= 7;
 
     final (color, icon, text) = !isValid
-        ? (AppTheme.errorColor, Icons.cancel, 'Expired')
+        ? (AppTheme.errorColor, Icons.cancel, 'Süresi Doldu')
         : isSoon
-            ? (AppTheme.warningColor, Icons.warning, 'Expiring Soon')
-            : (AppTheme.successColor, Icons.check_circle, 'Active');
+            ? (AppTheme.warningColor, Icons.warning, 'Yakında Sona Eriyor')
+            : (AppTheme.successColor, Icons.check_circle, 'Aktif');
 
     return _Card(
       child: Column(
@@ -313,7 +325,7 @@ class _MembershipCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Membership Status',
+                  'Üyelik Durumu',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style:
@@ -339,15 +351,15 @@ class _MembershipCard extends StatelessWidget {
           const SizedBox(height: 10),
           _InfoRow(
             icon: Icons.calendar_today,
-            label: 'Started',
-            value: _d(start),
+            label: 'Başlangıç',
+            value: _formatDate(start),
             color: AppTheme.successColor,
           ),
           const SizedBox(height: 10),
           _InfoRow(
             icon: Icons.event,
-            label: 'Expires',
-            value: _d(end),
+            label: 'Bitiş',
+            value: _formatDate(end),
             color: isSoon ? AppTheme.warningColor : AppTheme.infoColor,
           ),
           if (isValid) ...[
@@ -355,13 +367,15 @@ class _MembershipCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text('Days Remaining',
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTheme.bodySmall
-                          .copyWith(color: AppTheme.textSecondary)),
+                  child: Text(
+                    'Kalan Gün',
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.bodySmall
+                        .copyWith(color: AppTheme.textSecondary),
+                  ),
                 ),
                 Text(
-                  '$remainingDays days',
+                  remainingDays == 1 ? '1 gün' : '$remainingDays gün',
                   overflow: TextOverflow.ellipsis,
                   style: AppTheme.bodySmall.copyWith(
                     fontWeight: FontWeight.bold,
@@ -372,26 +386,85 @@ class _MembershipCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 6),
-            LinearProgressIndicator(
-              value: progress,
-              backgroundColor: AppTheme.dividerColor,
-              valueColor: AlwaysStoppedAnimation(
-                  isSoon ? AppTheme.warningColor : AppTheme.successColor),
-              minHeight: 6,
+            Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: AppTheme.dividerColor,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      isSoon ? AppTheme.warningColor : AppTheme.successColor,
+                    ),
+                    minHeight: 6,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '%${(progress * 100).toStringAsFixed(0)} kaldı',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                    Text(
+                      '$totalDays günün ${elapsedDays.clamp(0, totalDays)} günü kullanıldı',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ] else if (remainingDays < 0) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                // ignore: deprecated_member_use
+                color: AppTheme.errorColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                // ignore: deprecated_member_use
+                border: Border.all(color: AppTheme.errorColor.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline,
+                      size: 16, color: AppTheme.errorColor),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${remainingDays.abs()} gün önce doldu',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.errorColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ],
       ),
     );
   }
+
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow(
-      {required this.icon,
-      required this.label,
-      required this.value,
-      required this.color});
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
   final IconData icon;
   final String label;
   final String value;
@@ -404,29 +477,34 @@ class _InfoRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-                // ignore: deprecated_member_use
-                color: color.withOpacity(.1),
-                borderRadius: BorderRadius.circular(8)),
+              // ignore: deprecated_member_use
+              color: color.withOpacity(.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Icon(icon, size: 20, color: color),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(label,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
                   overflow: TextOverflow.ellipsis,
                   style: AppTheme.bodySmall
-                      .copyWith(color: AppTheme.textSecondary)),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                softWrap: true,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 2,
-                style:
-                    AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ]),
+                      .copyWith(color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  softWrap: true,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                  style:
+                      AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
           ),
         ],
       );
@@ -451,15 +529,17 @@ class _Chip extends StatelessWidget {
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 4),
-          Text(text,
-              overflow: TextOverflow.ellipsis,
-              style: AppTheme.bodySmall
-                  .copyWith(color: color, fontWeight: FontWeight.bold)),
+          Text(
+            text,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.bodySmall
+                .copyWith(color: color, fontWeight: FontWeight.bold),
+          ),
         ]),
       );
 }
 
-/// ============== QR SECTION ==============
+/// ============== QR BÖLÜMÜ ==============
 class _QrSection extends StatelessWidget {
   const _QrSection({
     required this.scale,
@@ -481,16 +561,16 @@ class _QrSection extends StatelessWidget {
       child: Column(
         key: const ValueKey('home_qr_card'),
         children: [
-          const Text('Entry QR Code', style: AppTheme.heading3),
+          const Text('Giriş QR Kodu', style: AppTheme.heading3),
           const SizedBox(height: 6),
-          Text('Scan at the turnstile',
-              overflow: TextOverflow.ellipsis,
-              style:
-                  AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary)),
+          Text(
+            'Turnikede okutun',
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary),
+          ),
           const SizedBox(height: 12),
           LayoutBuilder(
             builder: (context, c) {
-              // Ekstra güvenlik: yüksekliği de clamp’le
               final double qrSize =
                   (c.maxWidth - 48).clamp(120.0, 220.0).toDouble();
 
@@ -506,9 +586,10 @@ class _QrSection extends StatelessWidget {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                              // ignore: deprecated_member_use
-                              color: AppTheme.primaryColor.withOpacity(.2),
-                              width: 2),
+                            // ignore: deprecated_member_use
+                            color: AppTheme.primaryColor.withOpacity(.2),
+                            width: 2,
+                          ),
                         ),
                         child: SizedBox(
                           width: qrSize,
@@ -525,7 +606,8 @@ class _QrSection extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     _ValidityBadge(
-                        text: 'Valid until ${_t(qrData!.validUntil)}'),
+                      text: '${_t(qrData!.validUntil)} saatine kadar geçerli',
+                    ),
                   ],
                 );
               } else if (error != null) {
@@ -537,19 +619,24 @@ class _QrSection extends StatelessWidget {
                       const Icon(Icons.error_outline,
                           size: 48, color: AppTheme.errorColor),
                       const SizedBox(height: 8),
-                      Text('Failed to generate QR code',
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTheme.bodyMedium
-                              .copyWith(color: AppTheme.errorColor)),
+                      Text(
+                        'QR kodu oluşturulamadı',
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTheme.bodyMedium
+                            .copyWith(color: AppTheme.errorColor),
+                      ),
                       TextButton(
-                          onPressed: onRefresh, child: const Text('Retry')),
+                        onPressed: onRefresh,
+                        child: const Text('Tekrar Dene'),
+                      ),
                     ],
                   ),
                 );
               } else {
                 body = SizedBox(
-                    height: qrSize,
-                    child: const Center(child: CircularProgressIndicator()));
+                  height: qrSize,
+                  child: const Center(child: CircularProgressIndicator()),
+                );
               }
 
               return body;
@@ -558,22 +645,25 @@ class _QrSection extends StatelessWidget {
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: isRefreshing ? null : onRefresh,
-            icon: Icon(Icons.refresh,
-                color: isRefreshing
-                    ? AppTheme.textSecondary
-                    : AppTheme.primaryColor),
+            icon: Icon(
+              Icons.refresh,
+              color:
+                  isRefreshing ? AppTheme.textSecondary : AppTheme.primaryColor,
+            ),
             label: Text(
-              isRefreshing ? 'Refreshing...' : 'Refresh QR',
+              isRefreshing ? 'Yenileniyor…' : 'QR’yi Yenile',
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                  color: isRefreshing
-                      ? AppTheme.textSecondary
-                      : AppTheme.primaryColor),
+                color: isRefreshing
+                    ? AppTheme.textSecondary
+                    : AppTheme.primaryColor,
+              ),
             ),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(double.infinity, 48),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
         ],
@@ -589,21 +679,26 @@ class _ValidityBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-            // ignore: deprecated_member_use
-            color: AppTheme.successColor.withOpacity(.1),
-            borderRadius: BorderRadius.circular(20)),
+          // ignore: deprecated_member_use
+          color: AppTheme.successColor.withOpacity(.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           const Icon(Icons.access_time, size: 16, color: AppTheme.successColor),
           const SizedBox(width: 4),
-          Text(text,
-              overflow: TextOverflow.ellipsis,
-              style: AppTheme.bodySmall.copyWith(
-                  color: AppTheme.successColor, fontWeight: FontWeight.w500)),
+          Text(
+            text,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.bodySmall.copyWith(
+              color: AppTheme.successColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ]),
       );
 }
 
-/// ============== INFO CARD WRAPPER ==============
+/// ============== KART SARMALAYICI ==============
 class _Card extends StatelessWidget {
   const _Card({required this.child});
   final Widget child;
@@ -619,7 +714,7 @@ class _Card extends StatelessWidget {
       );
 }
 
-/// ============== INSTRUCTIONS ==============
+/// ============== KULLANIM TALİMATI ==============
 class _Instructions extends StatelessWidget {
   const _Instructions();
   @override
@@ -637,10 +732,10 @@ class _Instructions extends StatelessWidget {
           children: [
             _TitleRow(),
             SizedBox(height: 8),
-            _Step(numLabel: '1', text: 'Open this screen at the gym entrance'),
-            _Step(numLabel: '2', text: 'Hold your phone near the scanner'),
-            _Step(numLabel: '3', text: 'Wait for the green light'),
-            _Step(numLabel: '4', text: 'Push the turnstile to enter'),
+            _Step(numLabel: '1', text: 'Girişte bu ekranı açın'),
+            _Step(numLabel: '2', text: 'Telefonunuzu okuyucuya yaklaştırın'),
+            _Step(numLabel: '3', text: 'Yeşil ışığı bekleyin'),
+            _Step(numLabel: '4', text: 'Turnikeyi iterek içeri girin'),
           ],
         ),
       );
@@ -653,10 +748,14 @@ class _TitleRow extends StatelessWidget {
         children: [
           const Icon(Icons.info_outline, size: 20, color: AppTheme.infoColor),
           const SizedBox(width: 8),
-          Text('How to use',
-              overflow: TextOverflow.ellipsis,
-              style: AppTheme.bodyMedium.copyWith(
-                  fontWeight: FontWeight.bold, color: AppTheme.infoColor)),
+          Text(
+            'Nasıl Kullanılır',
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.bodyMedium.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.infoColor,
+            ),
+          ),
         ],
       );
 }
@@ -673,33 +772,37 @@ class _Step extends StatelessWidget {
             width: 20,
             height: 20,
             decoration: BoxDecoration(
-                // ignore: deprecated_member_use
-                color: AppTheme.infoColor.withOpacity(.2),
-                shape: BoxShape.circle),
+              // ignore: deprecated_member_use
+              color: AppTheme.infoColor.withOpacity(.2),
+              shape: BoxShape.circle,
+            ),
             child: Center(
-              child: Text(numLabel,
-                  style: AppTheme.bodySmall.copyWith(
-                      color: AppTheme.infoColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10)),
+              child: Text(
+                numLabel,
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppTheme.infoColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
-              child: Text(text,
-                  style: AppTheme.bodySmall
-                      .copyWith(color: AppTheme.textSecondary))),
+            child: Text(
+              text,
+              style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary),
+            ),
+          ),
         ]),
       );
 }
 
-/// ============== HELPERS ==============
-String _d(DateTime d) =>
-    '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+/// ============== YARDIMCI FONKSİYONLAR ==============
 String _t(DateTime d) =>
     '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 
-/// ============== SCREENSHOT BLOCKER ==============
+/// ============== EKRAN GÖRÜNTÜSÜ ÖNLEME ==============
 class NoScreenshot extends StatefulWidget {
   const NoScreenshot({super.key, required this.child});
   final Widget child;
@@ -720,10 +823,10 @@ class _NoScreenshotState extends State<NoScreenshot> {
       await ScreenProtector.protectDataLeakageOn();
       if (kDebugMode) {
         debugPrint(
-            '[NoScreenshot] protection ON (Platform: ${Platform.operatingSystem})');
+            '[NoScreenshot] koruma AÇIK (Platform: ${Platform.operatingSystem})');
       }
     } catch (e) {
-      debugPrint('[NoScreenshot] enable failed: $e');
+      debugPrint('[NoScreenshot] etkinleştirme başarısız: $e');
     }
   }
 
@@ -732,10 +835,10 @@ class _NoScreenshotState extends State<NoScreenshot> {
       await ScreenProtector.preventScreenshotOff();
       await ScreenProtector.protectDataLeakageOff();
       if (kDebugMode) {
-        debugPrint('[NoScreenshot] protection OFF');
+        debugPrint('[NoScreenshot] koruma KAPALI');
       }
     } catch (e) {
-      debugPrint('[NoScreenshot] disable failed: $e');
+      debugPrint('[NoScreenshot] kapatma başarısız: $e');
     }
   }
 
